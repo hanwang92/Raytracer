@@ -6,4 +6,6 @@
 5) Shadow
 
 Run with ./raytracer
+
+
 ![Alt text](https://github.com/hanwang92/Raytracer/blob/master/view.bmp)
