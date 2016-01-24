@@ -1,8 +1,8 @@
 # Raytracer
-1) Square, sphere, triangle, cyclinder ray intersection
-2) Phong shading
-3) Anti-aliasing
-4) Reflection
+1) Square, sphere, triangle, cyclinder ray intersection<br/>
+2) Phong shading<br/>
+3) Anti-aliasing<br/>
+4) Reflection<br/>
 5) Shadow
 
 Run with ./raytracer
