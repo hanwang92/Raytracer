@@ -48,17 +48,6 @@ bool UnitTriangle::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		const Matrix4x4& modelToWorld ) {
-	// TODO: implement intersection code for UnitSquare, which is
-	// defined on the xy-plane, with vertices (0.5, 0.5, 0), 
-	// (-0.5, 0.5, 0), (-0.5, -0.5, 0), (0.5, -0.5, 0), and normal
-	// (0, 0, 1).
-	//
-	// Your goal here is to fill ray.intersection with correct values
-	// should an intersection occur.  This includes intersection.point, 
-	// intersection.normal, intersection.none, intersection.t_value.   
-	//
-	// HINT: Remember to first transform the ray into object space  
-	// to simplify the intersection test.
 
 	// Create ray in object space and compute its intersection point
 	Ray3D ray_obj;
@@ -89,15 +78,6 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		const Matrix4x4& modelToWorld ) {
-	// TODO: implement intersection code for UnitSphere, which is centred 
-	// on the origin.  
-	//
-	// Your goal here is to fill ray.intersection with correct values
-	// should an intersection occur.  This includes intersection.point, 
-	// intersection.normal, intersection.none, intersection.t_value.   
-	//
-	// HINT: Remember to first transform the ray into object space  
-	// to simplify the intersection test.
 	
 	// Create ray in object space and compute its intersection point
 	Ray3D ray_obj;

@@ -1,16 +1,3 @@
-/***********************************************************
-     Starter code for Assignment 3
-
-     This code was originally written by Jack Wang for
-		    CSC418, SPRING 2005
-
-		Implementations of functions in raytracer.h, 
-		and the main function which specifies the 
-		scene to be rendered.	
-
-***********************************************************/
-
-
 #include "raytracer.h"
 #include "bmp_io.h"
 #include <cmath>
@@ -22,6 +9,9 @@ bool SHADOWS_ENABLED = true;
 bool REFLECTION_ENABLED = true;
 bool ANTIALIASING_ENABLED = true;
 bool SOFTSHADOWS_ENABLED = false;
+
+// Depth of shade ray
+int depth = 0;
 
 Raytracer::Raytracer() : _lightSource(NULL) {
 	_root = new SceneDagNode();
@@ -190,9 +180,8 @@ void Raytracer::computeShading( Ray3D& ray ) {
 	LightListNode* curLight = _lightSource;
 	for (;;) {
 		if (curLight == NULL) break;
+		
 		// Each lightSource provides its own shading function.
-
-		// Implement shadows here if needed.
 		Colour totalColor(0.0, 0.0, 0.0);
 
 		// Shadowing
@@ -204,9 +193,7 @@ void Raytracer::computeShading( Ray3D& ray ) {
 				shadowDir[1] += i;
 				shadowDir[2] += i;
 				shadowDir.normalize();
-				
 				Point3D shadowOrigin = ray.intersection.point + 0.01*shadowDir;
-				
 				Ray3D shadowRay(shadowOrigin , shadowDir);
 				traverseScene(_root, shadowRay);
 				
@@ -216,14 +203,6 @@ void Raytracer::computeShading( Ray3D& ray ) {
 				if (!shadowRay.intersection.none) 
 				{
 					ray.col = (0.7f)*ray.col;
-					
-					/*  
-					totalColor[0] = totalColor[0] + ((1.0f/40.0f))*ray.col[0];            
-					totalColor[1] = totalColor[1] + ((1.0f/40.0f))*ray.col[1];            
-					totalColor[2] = totalColor[2] + ((1.0f/40.0f))*ray.col[2];
-					totalColor.clamp();
-					ray.col = totalColor;
-					*/
 				}	
 			}
 			curLight = curLight->next;
@@ -258,14 +237,6 @@ void Raytracer::flushPixelBuffer( char *file_name ) {
 	delete _bbuffer;
 }
 
-
-float dampFactor = 0.0;
-int depth = 0;
-const double EPSILON = 0.0001;
-double reflectivePercentage;
-double refractivePercentage;
-
-
 Colour Raytracer::shadeRay( Ray3D& ray, double refractionIndex ) {
 	Colour col; 
 	Colour reflectColour;
@@ -273,7 +244,6 @@ Colour Raytracer::shadeRay( Ray3D& ray, double refractionIndex ) {
 	traverseScene(_root, ray); 
 	LightListNode* curLight = _lightSource;
 	
-	//printf("in shadeRay");
 	if (depth > 10)
 		return col;
 	
@@ -283,21 +253,16 @@ Colour Raytracer::shadeRay( Ray3D& ray, double refractionIndex ) {
 		computeShading(ray); 
 		col = ray.col;  
 	
-
-		// You'll want to call shadeRay recursively (with a different ray, 
-		// of course) here to implement reflection/refraction effects.
-		
 		// Reflection
 		if (REFLECTION_ENABLED) {
 			if (ray.intersection.mat->specular[0] > 0 && ray.intersection.mat->specular[1] > 0 && ray.intersection.mat->specular[2] > 0) {
-		
+			
 				Vector3D N = ray.intersection.normal;
 				N.normalize(); 
 				Vector3D D = ray.dir;
 				D.normalize();
 				Vector3D reflectD = -2*(D.dot(N))*N + D;
 				reflectD.normalize();
-				
 				Ray3D reflectRay = Ray3D (ray.intersection.point + 0.01*reflectD, reflectD);
 				depth += 1;
 				reflectColour = shadeRay(reflectRay, refractionIndex);
@@ -323,8 +288,10 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 	// Construct a ray for each pixel.
 	for (int i = 0; i < _scrHeight; i++) {
 		for (int j = 0; j < _scrWidth; j++) {
-			//Antialiasing
-			if (true) {
+		
+			//Anti-aliasing
+			if (ANTIALIASING_ENABLED) {
+			
 				// Multiple pixel samples are chosen within a range from the target pixel 
 				Colour totalColor(0.0,0.0,0.0);
 				int sample = 4;
@@ -339,24 +306,21 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 						imagePlane[0] = (-double(width)/2+ j + sampDist1)/factor;
 						imagePlane[1] = (-double(height)/2 + i + sampDist2)/factor;
 						imagePlane[2] = -1;
-			
-						// TODO: Convert ray to world space and call 
-						// shadeRay(ray) to generate pixel colour. 	
 						
-						Ray3D ray;
 						// Convert ray to world space
+						Ray3D ray;
 						ray.origin = viewToWorld * origin;
 						ray.dir = viewToWorld * (imagePlane - origin);
 						ray.dir.normalize();
 						
-						// Sample pixel colors are summed up 
+						// Sample pixel colours are summed up 
 						depth = 0;
 						Colour col = shadeRay(ray, 1.0);
 						totalColor = totalColor + col;
 					}
 				}
 			  
-				// Divide total color by number of samples factor to get an averaged color
+				// Divide total colour by number of samples factor to get an averaged colour
 				Colour colour(totalColor[0]/pow(sample,2), totalColor[1]/pow(sample,2), totalColor[2]/pow(sample,2));
 				colour = Colour(fmin(1.0, colour[0]), fmin(1.0, colour[1]), fmin(1.0, colour[2]));
 				
@@ -370,12 +334,9 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 				imagePlane[0] = (-double(width)/2 + 0.5 + j)/factor;
 				imagePlane[1] = (-double(height)/2 + 0.5 + i)/factor;
 				imagePlane[2] = -1;
-	
-				// TODO: Convert ray to world space and call 
-				// shadeRay(ray) to generate pixel colour. 	
 				
-				Ray3D ray;
 				// Convert ray to world space
+				Ray3D ray;
 				ray.origin = viewToWorld * origin;
 				ray.dir = viewToWorld * (imagePlane - origin);
 				ray.dir.normalize();
@@ -396,16 +357,9 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 
 int main(int argc, char* argv[])
 {	
-	// Build your scene and setup your camera here, by calling 
-	// functions from Raytracer.  The code here sets up an example
-	// scene and renders it from two different view points, DO NOT
-	// change this if you're just implementing part one of the 
-	// assignment.  
 	Raytracer raytracer;
 	int width = 320; 
 	int height = 240;
-	//int width = 640; 
-	//int height = 480;
 
 	if (argc == 3) {
 		width = atoi(argv[1]);
@@ -413,12 +367,12 @@ int main(int argc, char* argv[])
 	}
 
 	// Camera parameters.
-	//Point3D eye(0, 0, 1);
 	Point3D eye(0, 0, -0.7);
 	Vector3D view(0, 0, -1);
 	Vector3D up(0, 1, 0);
 	double fov = 60;
 
+	// Material parameters
 	Material test( Colour(0.3, 0.3, 0.3), Colour(0.0, 0.0, 0.0), 
 			Colour(0.628281, 0.555802, 0.366065), 
 			50, 1.5 );
@@ -435,21 +389,19 @@ int main(int argc, char* argv[])
 			Colour(0.0, 0.1, 0.1), 
 			9.84615, 1.0 );
 
-
 	// Defines a point light source.
 	raytracer.addLightSource( new PointLight(Point3D(1.2, 1.0, -1.4), Colour(0.9, 0.9, 0.9) ) );
 	
+	// Adds objects to scene
 	SceneDagNode* head = raytracer.addObject( new UnitSphere(), &test );
 	SceneDagNode* body = raytracer.addObject( new UnitCylinder(), &test );
 	SceneDagNode* wing1 = raytracer.addObject( new UnitTriangle(), &test );
 	SceneDagNode* wing2 = raytracer.addObject( new UnitTriangle(), &test );
-	
 	SceneDagNode* plane1 = raytracer.addObject( new UnitSquare(), &test_perl );
 	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &test_perl );
 	SceneDagNode* plane3 = raytracer.addObject( new UnitSquare(), &test_perl );
 	SceneDagNode* plane4 = raytracer.addObject( new UnitSquare(), &test_ruby );
 	SceneDagNode* plane5 = raytracer.addObject( new UnitSquare(), &test_tin );
-	//SceneDagNode* plane6 = raytracer.addObject( new UnitSquare(), &test_perl );
 	
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 0.8, 0.8, 0.8 };
@@ -458,7 +410,7 @@ int main(int argc, char* argv[])
 	double body_factor[3] = { 0.5, 0.5, 1.5 };
 	double wing_factor[3] = { 2.8, 1.4, 1.1 };
 	
-	// Angel
+	// Angel figure
 	//
 	// Head
 	raytracer.scale(head, Point3D(0, 0, 0), factor1);
@@ -486,52 +438,32 @@ int main(int argc, char* argv[])
 	
 	// Background box
 	//
-	//plane1
+	// Plane1
 	raytracer.translate(plane1, Vector3D(0, 0, -7));	
 	raytracer.scale(plane1, Point3D(0, 0, 0), factor2);
 	
-	// plane2
+	// Plane2
 	raytracer.scale(plane2, Point3D(0, 0, 0), factor2);
 	raytracer.rotate(plane2, 'x', 90);
 	raytracer.translate(plane2, Vector3D(0, -0.68, -0.5));
 	
-	// plane3
+	// Plane3
 	raytracer.scale(plane3, Point3D(0, 0, 0), factor2);
 	raytracer.rotate(plane3, 'x', 90);
 	raytracer.translate(plane3, Vector3D(0, -0.68, 0.5));
 	
-	// plane4
+	// Plane4
 	raytracer.scale(plane4, Point3D(0, 0, 0), factor2);
 	raytracer.rotate(plane4, 'y', 90);
 	raytracer.translate(plane4, Vector3D(0.68, 0, -0.5));
 	
-	// plane5
+	// Plane5
 	raytracer.scale(plane5, Point3D(0, 0, 0), factor2);
 	raytracer.rotate(plane5, 'y', 90);
 	raytracer.translate(plane5, Vector3D(0.68, 0, 0.5));
 	
-	/*
-	// plane6
-	raytracer.scale(plane6, Point3D(0, 0, 0), factor2);
-	raytracer.translate(plane6, Vector3D(0, 0, -0.1));
-	*/
-
-
-	// Render the scene, feel free to make the image smaller for
-	// testing purposes.	
-	//Point3D eye2(4, 2, 1);
-	//Vector3D view2(-4, -2, -6);
+	// Output file
 	raytracer.render(width, height, eye, view, up, fov, "view.bmp");
-	
-	// Render it from a different point of view.
-	//Point3D eye2(4, 2, 1);
-	//Vector3D view2(-4, -2, -6);
-	//raytracer.render(width, height, eye2, view2, up, fov, "view2.bmp");
-	
-	//Point3D eye3(8, 2, -6);
-	//Vector3D view3(-4, -1, -1);
-	//raytracer.render(width, height, eye3, view3, up, fov, "view3.bmp");
-	
 	
 	return 0;
 }
