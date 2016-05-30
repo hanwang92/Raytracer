@@ -196,10 +196,7 @@ void Raytracer::computeShading( Ray3D& ray ) {
 				Point3D shadowOrigin = ray.intersection.point + 0.01*shadowDir;
 				Ray3D shadowRay(shadowOrigin , shadowDir);
 				traverseScene(_root, shadowRay);
-				
-				// Compute non-shadow colour
 				curLight->light->shade(ray);
-				
 				if (!shadowRay.intersection.none) 
 				{
 					ray.col = (0.7f)*ray.col;
@@ -207,12 +204,10 @@ void Raytracer::computeShading( Ray3D& ray ) {
 			}
 			curLight = curLight->next;
 		}
-		
 		else {
 			curLight->light->shade(ray);
 			curLight = curLight->next; 
 		}
-	 
 	}
 }
 
@@ -256,7 +251,6 @@ Colour Raytracer::shadeRay( Ray3D& ray, double refractionIndex ) {
 		// Reflection
 		if (REFLECTION_ENABLED) {
 			if (ray.intersection.mat->specular[0] > 0 && ray.intersection.mat->specular[1] > 0 && ray.intersection.mat->specular[2] > 0) {
-			
 				Vector3D N = ray.intersection.normal;
 				N.normalize(); 
 				Vector3D D = ray.dir;
@@ -297,10 +291,8 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 				int sample = 4;
 				for (int h=0; h <sample; h++){
 					for (int k=0; k<sample; k++){
-			  
 						double sampDist1 = (h + 1.0*rand()/RAND_MAX)/sample;
 						double sampDist2 = (k + 1.0*rand()/RAND_MAX)/sample;
-					
 						Point3D origin(0, 0, 0);
 						Point3D imagePlane;
 						imagePlane[0] = (-double(width)/2+ j + sampDist1)/factor;

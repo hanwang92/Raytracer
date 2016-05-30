@@ -1,13 +1,3 @@
-/***********************************************************
-     Starter code for Assignment 3
-
-     This code was originally written by Jack Wang for
-		    CSC418, SPRING 2005
-
-		implements scene_object.h
-
-***********************************************************/
-
 #include <cmath>
 #include <iostream>
 #include "bmp_io.h"
